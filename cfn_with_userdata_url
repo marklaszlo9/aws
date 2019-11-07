@@ -1,0 +1,646 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ''
+Parameters:
+  AutoScalingGroupDesiredCapacity:
+    Type: Number
+    Default: 1
+    Description: Desired capacity of instances in ASG.
+  AutoScalingGroupMaxSize:
+    Type: Number
+    Default: 1
+    Description: >-
+      Maximum size of instances in ASG. Set to at least 1 greater than
+      AutoScalingGroupDesiredCapacity.
+  AutoScalingGroupMinSize:
+    Type: Number
+    Default: 1
+    Description: Minimum size of instances in ASG.
+  KeyName:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: The EC2 Key Pair to allow SSH access to the instances
+  ImageId:
+    Type: String
+    Default: ami-05a51ff00c1d77571
+    Description: >-
+      (Optional) Specify your own custom image ID. This value overrides any AWS
+      Systems Manager Parameter Store value specified above.
+  ImageIdSSMParam:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: /aws/service/eks/optimized-ami/1.14/amazon-linux-2/recommended/image_id
+    Description: >-
+      AWS Systems Manager Parameter Store parameter of the AMI ID for the
+      instances.
+  efsmountpoint1:
+    Type: String
+    Default: /mnt/efs/fs1
+  InstanceType:
+    Type: String
+    Default: t3.nano
+    AllowedValues:
+      - a1.medium
+      - a1.large
+      - a1.xlarge
+      - a1.2xlarge
+      - a1.4xlarge
+      - c1.medium
+      - c1.xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+      - c5.9xlarge
+      - c5.12xlarge
+      - c5.18xlarge
+      - c5.24xlarge
+      - c5.metal
+      - c5d.large
+      - c5d.xlarge
+      - c5d.2xlarge
+      - c5d.4xlarge
+      - c5d.9xlarge
+      - c5d.18xlarge
+      - c5n.large
+      - c5n.xlarge
+      - c5n.2xlarge
+      - c5n.4xlarge
+      - c5n.9xlarge
+      - c5n.18xlarge
+      - cc2.8xlarge
+      - cr1.8xlarge
+      - d2.xlarge
+      - d2.2xlarge
+      - d2.4xlarge
+      - d2.8xlarge
+      - f1.2xlarge
+      - f1.4xlarge
+      - f1.16xlarge
+      - g2.2xlarge
+      - g2.8xlarge
+      - g3s.xlarge
+      - g3.4xlarge
+      - g3.8xlarge
+      - g3.16xlarge
+      - h1.2xlarge
+      - h1.4xlarge
+      - h1.8xlarge
+      - h1.16xlarge
+      - hs1.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - i3.large
+      - i3.xlarge
+      - i3.2xlarge
+      - i3.4xlarge
+      - i3.8xlarge
+      - i3.16xlarge
+      - i3.metal
+      - i3en.large
+      - i3en.xlarge
+      - i3en.2xlarge
+      - i3en.3xlarge
+      - i3en.6xlarge
+      - i3en.12xlarge
+      - i3en.24xlarge
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+      - m2.xlarge
+      - m2.2xlarge
+      - m2.4xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - m5.8xlarge
+      - m5.12xlarge
+      - m5.16xlarge
+      - m5.24xlarge
+      - m5.metal
+      - m5a.large
+      - m5a.xlarge
+      - m5a.2xlarge
+      - m5a.4xlarge
+      - m5a.8xlarge
+      - m5a.12xlarge
+      - m5a.16xlarge
+      - m5a.24xlarge
+      - m5ad.large
+      - m5ad.xlarge
+      - m5ad.2xlarge
+      - m5ad.4xlarge
+      - m5ad.12xlarge
+      - m5ad.24xlarge
+      - m5d.large
+      - m5d.xlarge
+      - m5d.2xlarge
+      - m5d.4xlarge
+      - m5d.8xlarge
+      - m5d.12xlarge
+      - m5d.16xlarge
+      - m5d.24xlarge
+      - m5d.metal
+      - m5dn.large
+      - m5dn.xlarge
+      - m5dn.2xlarge
+      - m5dn.4xlarge
+      - m5dn.8xlarge
+      - m5dn.12xlarge
+      - m5dn.16xlarge
+      - m5dn.24xlarge
+      - m5n.large
+      - m5n.xlarge
+      - m5n.2xlarge
+      - m5n.4xlarge
+      - m5n.8xlarge
+      - m5n.12xlarge
+      - m5n.16xlarge
+      - m5n.24xlarge
+      - p2.xlarge
+      - p2.8xlarge
+      - p2.16xlarge
+      - p3.2xlarge
+      - p3.8xlarge
+      - p3.16xlarge
+      - p3dn.24xlarge
+      - g4dn.xlarge
+      - g4dn.2xlarge
+      - g4dn.4xlarge
+      - g4dn.8xlarge
+      - g4dn.12xlarge
+      - g4dn.16xlarge
+      - g4dn.metal
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - r4.large
+      - r4.xlarge
+      - r4.2xlarge
+      - r4.4xlarge
+      - r4.8xlarge
+      - r4.16xlarge
+      - r5.large
+      - r5.xlarge
+      - r5.2xlarge
+      - r5.4xlarge
+      - r5.8xlarge
+      - r5.12xlarge
+      - r5.16xlarge
+      - r5.24xlarge
+      - r5.metal
+      - r5a.large
+      - r5a.xlarge
+      - r5a.2xlarge
+      - r5a.4xlarge
+      - r5a.8xlarge
+      - r5a.12xlarge
+      - r5a.16xlarge
+      - r5a.24xlarge
+      - r5ad.large
+      - r5ad.xlarge
+      - r5ad.2xlarge
+      - r5ad.4xlarge
+      - r5ad.12xlarge
+      - r5ad.24xlarge
+      - r5d.large
+      - r5d.xlarge
+      - r5d.2xlarge
+      - r5d.4xlarge
+      - r5d.8xlarge
+      - r5d.12xlarge
+      - r5d.16xlarge
+      - r5d.24xlarge
+      - r5d.metal
+      - r5dn.large
+      - r5dn.xlarge
+      - r5dn.2xlarge
+      - r5dn.4xlarge
+      - r5dn.8xlarge
+      - r5dn.12xlarge
+      - r5dn.16xlarge
+      - r5dn.24xlarge
+      - r5n.large
+      - r5n.xlarge
+      - r5n.2xlarge
+      - r5n.4xlarge
+      - r5n.8xlarge
+      - r5n.12xlarge
+      - r5n.16xlarge
+      - r5n.24xlarge
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - t3.nano
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - t3a.nano
+      - t3a.micro
+      - t3a.small
+      - t3a.medium
+      - t3a.large
+      - t3a.xlarge
+      - t3a.2xlarge
+      - u-6tb1.metal
+      - u-9tb1.metal
+      - u-12tb1.metal
+      - x1.16xlarge
+      - x1.32xlarge
+      - x1e.xlarge
+      - x1e.2xlarge
+      - x1e.4xlarge
+      - x1e.8xlarge
+      - x1e.16xlarge
+      - x1e.32xlarge
+      - z1d.large
+      - z1d.xlarge
+      - z1d.2xlarge
+      - z1d.3xlarge
+      - z1d.6xlarge
+      - z1d.12xlarge
+      - z1d.metal
+    ConstraintDescription: Must be a valid EC2 instance type
+    Description: EC2 instance type for the instances
+  VolumeSize:
+    Type: Number
+    Default: 8
+    Description: Volume size
+  Subnets:
+    Type: 'AWS::EC2::Subnet::Id'
+    Description: The subnets where instances can be created.
+  VpcId:
+    Type: 'AWS::EC2::VPC::Id'
+    Description: The VPC of the worker instances
+  UserDataUrl:
+    Type: String
+    Description: Url to a user-data script
+Conditions:
+  HasImageId: !Not 
+    - !Equals 
+      - !Ref ImageId
+      - ''
+Resources:
+  EFS:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      Encrypted: true
+      KmsKeyId: !GetAtt 
+        - key
+        - Arn
+  key:
+    Type: 'AWS::KMS::Key'
+    Properties:
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+          - Sid: Allow administration of the key
+            Effect: Allow
+            Principal:
+              AWS: !Join 
+                - ''
+                - - 'arn:aws:iam::'
+                  - !Ref 'AWS::AccountId'
+                  - ':root'
+            Action:
+              - 'kms:*'
+            Resource: '*'
+  MountTarget:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !Ref EFS
+      SubnetId: !Ref Subnets
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+  InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+  RolePolicies:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: root
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ssm:DescribeAssociation'
+              - 'ssm:GetDeployablePatchSnapshotForInstance'
+              - 'ssm:GetDocument'
+              - 'ssm:DescribeDocument'
+              - 'ssm:GetManifest'
+              - 'ssm:GetParameters'
+              - 'ssm:ListAssociations'
+              - 'ssm:ListInstanceAssociations'
+              - 'ssm:PutInventory'
+              - 'ssm:PutComplianceItems'
+              - 'ssm:PutConfigurePackageResult'
+              - 'ssm:UpdateAssociationStatus'
+              - 'ssm:UpdateInstanceAssociationStatus'
+              - 'ssm:UpdateInstanceInformation'
+              - 'ssmmessages:CreateControlChannel'
+              - 'ssmmessages:CreateDataChannel'
+              - 'ssmmessages:OpenControlChannel'
+              - 'ssmmessages:OpenDataChannel'
+              - 'ec2messages:AcknowledgeMessage'
+              - 'ec2messages:DeleteMessage'
+              - 'ec2messages:FailMessage'
+              - 'ec2messages:GetEndpoint'
+              - 'ec2messages:GetMessages'
+              - 'ec2messages:SendReply'
+              - 'cloudwatch:PutMetricData'
+              - 'ec2:DescribeInstanceStatus'
+              - 'ds:CreateComputer'
+              - 'ds:DescribeDirectories'
+              - 'ec2:DescribeVolumes'
+              - 'ec2:DescribeTags'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:DescribeLogGroups'
+              - 'logs:DescribeLogStreams'
+              - 'logs:PutLogEvents'
+              - 's3:GetBucketLocation'
+              - 's3:PutObject'
+              - 's3:GetObject'
+              - 's3:GetEncryptionConfiguration'
+              - 's3:AbortMultipartUpload'
+              - 's3:ListMultipartUploadParts'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+            Resource: '*'
+      Roles:
+        - !Ref InstanceRole
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+  InstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security group for all instances
+      VpcId: !Ref VpcId
+  LaunchConfig:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      AssociatePublicIpAddress: 'true'
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            VolumeSize: !Ref VolumeSize
+            VolumeType: gp2
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !If 
+        - HasImageId
+        - !Ref ImageId
+        - !Ref ImageIdSSMParam
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64 
+        'Fn::Join':
+          - ''
+          - - |
+              Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+            - |
+              MIME-Version: 1.0
+            - |+
+
+            - |
+              --==BOUNDARY==
+            - |
+              MIME-Version: 1.0
+            - |
+              Content-Type: text/x-shellscript; charset="us-ascii"
+            - |
+              #!/bin/bash
+            - |
+              echo "Part1" >> /var/log/order.log
+            - |
+              echo "Executing: Part1"
+            - |
+              --==BOUNDARY==
+            - |
+              MIME-Version: 1.0
+            - |
+              Content-Type: text/x-shellscript; charset="us-ascii"
+            - |
+              #!/bin/bash
+            - |
+              echo "Part2" >> /var/log/order.log
+            - |
+              echo "Executing: Part2"
+            - |
+              --==BOUNDARY==
+            - |
+              MIME-Version: 1.0
+            - |
+              Content-Type: text/x-include-url; charset="us-ascii"
+            - |+
+
+            - !Sub |
+              ${UserDataUrl}
+            - |
+              --==BOUNDARY==
+  ASG1:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      DesiredCapacity: !Ref AutoScalingGroupDesiredCapacity
+      LaunchConfigurationName: !Ref LaunchConfig
+      MaxSize: !Ref AutoScalingGroupMaxSize
+      MinSize: !Ref AutoScalingGroupMinSize
+      Tags:
+        - Key: Name
+          PropagateAtLaunch: 'true'
+          Value: ssm+cw+efs - test - M
+        - Key: ZONE
+          PropagateAtLaunch: 'true'
+          Value: redis.cluster.
+        - Key: CNAME
+          PropagateAtLaunch: 'true'
+          Value: master.redis.cluster.
+      VPCZoneIdentifier:
+        - !Ref Subnets
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '1'
+        MinInstancesInService: !Ref AutoScalingGroupDesiredCapacity
+        PauseTime: PT5M
+  ASG2:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      DesiredCapacity: !Ref AutoScalingGroupDesiredCapacity
+      LaunchConfigurationName: !Ref LaunchConfig
+      MaxSize: !Ref AutoScalingGroupMaxSize
+      MinSize: !Ref AutoScalingGroupMinSize
+      Tags:
+        - Key: Name
+          PropagateAtLaunch: 'true'
+          Value: ssm+cw+efs - test - S
+        - Key: ZONE
+          PropagateAtLaunch: 'true'
+          Value: redis.cluster.
+        - Key: CNAME
+          PropagateAtLaunch: 'true'
+          Value: slave.redis.cluster.
+      VPCZoneIdentifier:
+        - !Ref Subnets
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '1'
+        MinInstancesInService: !Ref AutoScalingGroupDesiredCapacity
+        PauseTime: PT5M
+  LambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+  LambdaRolePolicies:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: lambda-ddns
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogStream'
+              - 'ec2:Describe*'
+              - 'route53:*'
+              - 'dynamodb:*'
+              - 'logs:CreateLogGroup'
+              - 'logs:PutLogEvents'
+            Resource: '*'
+      Roles:
+        - !Ref LambdaRole
+  LambdaProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref LambdaRole
+  EventRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: EventRule
+      EventPattern:
+        source:
+          - aws.ec2
+        detail-type:
+          - EC2 Instance State-change Notification
+        detail:
+          state:
+            - stopped
+            - shutting-down
+            - running
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt 
+            - Lambda
+            - Arn
+          Id: Lambda
+  PermissionForEventsToInvokeLambda:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !Ref Lambda
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt 
+        - EventRule
+        - Arn
+  Lambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: union.lambda_handler
+      Code:
+        S3Bucket: ddns-lambda-function
+        S3Key: union.zip
+      Runtime: python2.7
+      MemorySize: 1280
+      Timeout: 500
+      Role: !GetAtt 
+        - LambdaRole
+        - Arn
+  DNS:
+    Type: 'AWS::Route53::HostedZone'
+    Properties:
+      HostedZoneConfig:
+        Comment: My hosted zone for redis.cluster
+      Name: redis.cluster
+      VPCs:
+        - VPCId: !Ref VpcId
+          VPCRegion: !Ref 'AWS::Region'
+  myDhcpOptions:
+    Type: 'AWS::EC2::DHCPOptions'
+    Properties:
+      DomainName: redis.cluster
+      DomainNameServers:
+        - AmazonProvidedDNS
+Outputs:
+  InstanceRole:
+    Description: The instance role
+    Value: !GetAtt 
+      - InstanceRole
+      - Arn
+  SecurityGroup:
+    Description: The security group for the instances
+    Value: !Ref InstanceSecurityGroup
+  AutoScalingGroup1:
+    Description: The autoscaling group
+    Value: !Ref ASG1
+  AutoScalingGroup2:
+    Description: The autoscaling group
+    Value: !Ref ASG2
